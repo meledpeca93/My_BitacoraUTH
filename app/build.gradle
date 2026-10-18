@@ -36,7 +36,41 @@ dependencies {
     implementation libs.appcompat
     implementation libs.constraintlayout
     implementation libs.material
+    implementation 'net.java.dev.jna:jna:5.18.1@aar'
+    implementation 'com.alphacephei:vosk-android:0.3.75@aar'
     testImplementation libs.junit
     androidTestImplementation libs.espresso.core
     androidTestImplementation libs.ext.junit
 }
+
+// Descarga de preparación: la app instalada no necesita Internet para transcribir.
+// Ejecutar una vez: ./gradlew prepararModeloVosk
+def modeloZip = layout.projectDirectory.file('../.gradle/vosk/modelo-es-0.42.zip')
+tasks.register('descargarModeloVosk') {
+    outputs.file(modeloZip)
+    doLast {
+        File destino = modeloZip.asFile
+        destino.parentFile.mkdirs()
+        File temporal = new File(destino.path + '.part')
+        try {
+            def conexion = new URI('https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip').toURL().openConnection()
+            conexion.connectTimeout = 15000
+            conexion.readTimeout = 60000
+            conexion.inputStream.withCloseable { entrada ->
+                temporal.withOutputStream { salida -> salida << entrada }
+            }
+            if (!temporal.renameTo(destino)) throw new GradleException('No se pudo guardar el modelo español.')
+        } finally { temporal.delete() }
+    }
+}
+tasks.register('prepararModeloVosk', Sync) {
+    dependsOn 'descargarModeloVosk'
+    from(zipTree(modeloZip)) {
+        eachFile { archivo -> archivo.path = archivo.path.split('/').drop(1).join('/') }
+        includeEmptyDirs = false
+    }
+    into layout.projectDirectory.dir('src/main/assets/model-es')
+}
+
+// Incluye el modelo en el APK; las siguientes compilaciones reutilizan la descarga.
+tasks.named('preBuild').configure { dependsOn 'prepararModeloVosk' }

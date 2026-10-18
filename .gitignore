@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Modelo de voz descargable; se prepara con Gradle.
+/app/src/main/assets/model-es/

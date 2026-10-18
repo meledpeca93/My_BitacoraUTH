@@ -195,6 +195,9 @@ public class MainActivity extends AppCompatActivity {
             recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+            recorder.setAudioChannels(1);
+            recorder.setAudioSamplingRate(16000);
+            recorder.setAudioEncodingBitRate(64000);
             recorder.setOutputFile(archivoEnGrabacion);
             recorder.setOnErrorListener((r, what, extra) -> {
                 descartarGrabacion();
