@@ -1,5 +1,12 @@
 # Validación contra el examen — 2026-10-18
 
+Última actualización: el botón **Ver texto** está a la derecha de cada fila y reutiliza
+la transcripción guardada. Base de datos versión 4. Las 6 pruebas instrumentadas se
+ejecutaron correctamente en Samsung SM-A235M / Android 14, además de las 8 unitarias.
+La precisión con voz real continúa pendiente de evaluación. Los apartados previos que
+mencionan falta de dispositivos reflejan intentos anteriores, no el estado de estas pruebas.
+
+
 Actualización después de autorizar Vosk: la transcripción local de archivos ya está
 implementada. La compilación completa pasa y el APK incluye el modelo español.
 Pasaron 8 pruebas unitarias; Lint tiene cero errores y 91 advertencias. Cinco pruebas

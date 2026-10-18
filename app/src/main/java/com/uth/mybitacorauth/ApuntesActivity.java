@@ -25,6 +25,7 @@ import com.uth.mybitacorauth.controller.ApunteController;
 import com.uth.mybitacorauth.model.Apunte;
 import com.uth.mybitacorauth.util.ArchivoAudio;
 import com.uth.mybitacorauth.util.IconosUI;
+import com.uth.mybitacorauth.view.ApunteAdapter;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +41,7 @@ public class ApuntesActivity extends AppCompatActivity {
     private ListView lista;
     private TextView listaVacia;
     private Button reproducir;
+    private ApunteAdapter apuntesAdapter;
     private List<Apunte> apuntes = new ArrayList<>();
     private int seleccionadoId;
     private String asignaturaActual = "Todas";
@@ -69,6 +71,7 @@ public class ApuntesActivity extends AppCompatActivity {
             liberarReproductor();
             seleccionadoId = apuntes.get(position).getId();
             lista.setItemChecked(position, true);
+            apuntesAdapter.seleccionar(seleccionadoId);
             mostrarSeleccion();
         });
         findViewById(R.id.btnAtras).setOnClickListener(v -> finish());
@@ -119,14 +122,13 @@ public class ApuntesActivity extends AppCompatActivity {
         try {
             apuntes = "Todas".equals(asignaturaActual) ? controller.listarTodos()
                     : controller.filtrarPorAsignatura(asignaturaActual);
-            ArrayList<String> filas = new ArrayList<>();
             int posicionSeleccionada = -1;
             for (int i = 0; i < apuntes.size(); i++) {
                 Apunte apunte = apuntes.get(i);
-                filas.add(apunte.getFecha() + " | " + apunte.getTema());
                 if (apunte.getId() == seleccionadoId) posicionSeleccionada = i;
             }
-            lista.setAdapter(new ArrayAdapter<>(this, R.layout.item_apunte, android.R.id.text1, filas));
+            apuntesAdapter = new ApunteAdapter(this, apuntes, seleccionadoId, apunte -> abrirTexto(apunte));
+            lista.setAdapter(apuntesAdapter);
             lista.clearChoices();
             if (posicionSeleccionada >= 0) lista.setItemChecked(posicionSeleccionada, true);
             else seleccionadoId = 0;
@@ -144,7 +146,8 @@ public class ApuntesActivity extends AppCompatActivity {
         seleccionadoId = 0;
         mostrarSeleccion();
         ((TextView) findViewById(R.id.txtCantidad)).setText("Sin datos disponibles");
-        lista.setAdapter(new ArrayAdapter<String>(this, R.layout.item_apunte, android.R.id.text1));
+        apuntesAdapter = new ApunteAdapter(this, apuntes, 0, apunte -> abrirTexto(apunte));
+        lista.setAdapter(apuntesAdapter);
         listaVacia.setText("No se pudo cargar el listado.");
         mostrarMensaje("Apuntes", "No se pudieron consultar los apuntes. Intente abrir el listado nuevamente.");
     }
@@ -239,6 +242,18 @@ public class ApuntesActivity extends AppCompatActivity {
         liberarReproductor();
         Intent intent = new Intent(this, DictadoActivity.class);
         intent.putExtra(MainActivity.EXTRA_APUNTE_ID, apunte.getId());
+        startActivity(intent);
+    }
+
+    private void abrirTexto(Apunte apunte) {
+        liberarReproductor();
+        seleccionadoId = apunte.getId();
+        lista.setItemChecked(apuntes.indexOf(apunte), true);
+        apuntesAdapter.seleccionar(seleccionadoId);
+        mostrarSeleccion();
+        Intent intent = new Intent(this, DictadoActivity.class);
+        intent.putExtra(MainActivity.EXTRA_APUNTE_ID, apunte.getId());
+        intent.putExtra(DictadoActivity.EXTRA_TRANSCRIBIR_AUDIO, true);
         startActivity(intent);
     }
 

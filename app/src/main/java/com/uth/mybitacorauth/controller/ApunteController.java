@@ -83,10 +83,23 @@ public class ApunteController {
     }
 
     public int actualizarDescripcion(int id, String descripcion) {
+        return actualizarDescripcion(id, descripcion, false);
+    }
+
+    public int actualizarDescripcion(int id, String descripcion, boolean corregirTranscripcion) {
         if (id <= 0) throw new IllegalArgumentException("Seleccione un apunte válido.");
         String error = validarDescripcion(descripcion);
         if (error != null) throw new IllegalArgumentException(error);
-        return dao.actualizarDescripcion(id, descripcion.trim());
+        return dao.actualizarDescripcion(id, descripcion.trim(), corregirTranscripcion);
+    }
+
+    public String obtenerTranscripcion(int id) { return dao.obtenerTranscripcion(id); }
+
+    public boolean guardarTranscripcion(int id, String audio, String texto) {
+        if (id <= 0 || estaVacio(audio) || estaVacio(texto)) {
+            throw new IllegalArgumentException("La transcripción no contiene datos válidos.");
+        }
+        return dao.guardarTranscripcion(id, audio, texto.trim());
     }
 
     public List<Apunte> listarTodos() { return dao.listarTodos(); }

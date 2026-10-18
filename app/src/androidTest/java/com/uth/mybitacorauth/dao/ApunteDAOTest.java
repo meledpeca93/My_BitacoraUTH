@@ -132,6 +132,39 @@ public class ApunteDAOTest {
         }
     }
 
+    @Test public void conservaTextoYLoInvalidaAlReemplazarAudio() throws Exception {
+        crearAudio(new byte[]{1, 2, 3});
+        Apunte apunte = new Apunte(0, "Redes I", "Tema", "2026-10-18", "Descripción original", "audios/nota.m4a");
+        apunte.setId((int) dao.insertar(apunte));
+        assertTrue(dao.guardarTranscripcion(apunte.getId(), apunte.getAudio(), "Texto del audio"));
+        assertEquals("Descripción original", dao.buscarPorId(apunte.getId()).getDescripcion());
+        dao.cerrar();
+        dao = new ApunteDAO(contexto);
+        assertEquals("Texto del audio", dao.obtenerTranscripcion(apunte.getId()));
+        apunte.setTema("Tema actualizado");
+        assertEquals(1, dao.actualizar(apunte));
+        assertEquals("Texto del audio", dao.obtenerTranscripcion(apunte.getId()));
+        assertEquals(1, dao.actualizarDescripcion(apunte.getId(), "Texto corregido", true));
+        assertEquals("Texto corregido", dao.obtenerTranscripcion(apunte.getId()));
+        assertEquals("Texto corregido", dao.buscarPorId(apunte.getId()).getDescripcion());
+        assertEquals(1, dao.actualizarDescripcion(apunte.getId(), "Dictado nuevo", false));
+        assertEquals("Texto corregido", dao.obtenerTranscripcion(apunte.getId()));
+        File otro = new File(contexto.getFilesDir(), "audios/otra.m4a");
+        try (FileOutputStream salida = new FileOutputStream(otro)) { salida.write(new byte[]{4, 5}); }
+        apunte.setAudio("audios/otra.m4a");
+        assertEquals(1, dao.actualizar(apunte));
+        assertNull(dao.obtenerTranscripcion(apunte.getId()));
+        assertFalse(dao.guardarTranscripcion(apunte.getId(), "audios/nota.m4a", "Resultado antiguo"));
+        assertTrue(dao.guardarTranscripcion(apunte.getId(), apunte.getAudio(), "Otro audio"));
+        assertEquals(1, dao.eliminar(apunte.getId()));
+        DatabaseHelper helper = new DatabaseHelper(contexto);
+        try (Cursor cursor = helper.getReadableDatabase().rawQuery("SELECT COUNT(*) FROM transcripciones", null)) {
+            assertTrue(cursor.moveToFirst());
+            assertEquals(0, cursor.getInt(0));
+        }
+        helper.close();
+    }
+
     @Test public void migracionConservaApunteYConvierteRuta() {
         try (SQLiteDatabase db = SQLiteDatabase.create(null)) {
             DatabaseHelper helper = new DatabaseHelper(contexto);
@@ -141,7 +174,7 @@ public class ApunteDAOTest {
             db.execSQL("INSERT INTO apuntes (asignatura, tema, fecha, descripcion, audio) VALUES (?, ?, ?, ?, ?)",
                     new Object[]{"Redes I", "Tema", "2026-10-17", "Texto",
                             "/data/user/0/com.uth.mybitacorauth/files/audios/nota.m4a"});
-            helper.onUpgrade(db, 1, 3);
+            helper.onUpgrade(db, 1, 4);
             try (Cursor cursor = db.rawQuery("SELECT tema, audio FROM apuntes", null)) {
                 assertTrue(cursor.moveToFirst());
                 assertEquals("Tema", cursor.getString(0));

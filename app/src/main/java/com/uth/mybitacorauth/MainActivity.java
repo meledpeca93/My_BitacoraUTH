@@ -1,6 +1,7 @@
 package com.uth.mybitacorauth;
 
 import android.Manifest;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteException;
@@ -33,9 +34,12 @@ import com.uth.mybitacorauth.controller.ApunteController;
 import com.uth.mybitacorauth.model.Apunte;
 import com.uth.mybitacorauth.util.ArchivoAudio;
 import com.uth.mybitacorauth.util.IconosUI;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -104,6 +108,10 @@ public class MainActivity extends AppCompatActivity {
         asignatura = findViewById(R.id.spAsignatura);
         tema = findViewById(R.id.edtTema);
         fecha = findViewById(R.id.edtFecha);
+        fecha.setShowSoftInputOnFocus(false);
+        fecha.setOnClickListener(v -> mostrarCalendario());
+        ((TextInputLayout) findViewById(R.id.campoFecha))
+                .setEndIconOnClickListener(v -> mostrarCalendario());
         descripcion = findViewById(R.id.edtDescripcion);
         duracion = findViewById(R.id.txtDuracion);
         estadoAudio = findViewById(R.id.txtAudio);
@@ -115,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         apunteId = getIntent().getIntExtra(EXTRA_APUNTE_ID, 0);
         if (savedInstanceState != null) restaurarFormulario(savedInstanceState);
         else if (apunteId > 0) cargarApunte();
+        else colocarFechaActual();
         actualizarEstadoAudio();
         grabar.setOnClickListener(v -> gestionarGrabacion());
         reproducir.setOnClickListener(v -> reproducirAudio());
@@ -125,6 +134,27 @@ public class MainActivity extends AppCompatActivity {
             guardar.setText("Actualizar Apunte");
             ((TextView) findViewById(R.id.txtEncabezado)).setText("Editar apunte");
         }
+    }
+
+    private void colocarFechaActual() {
+        // Usa la fecha y zona horaria configuradas en el teléfono.
+        SimpleDateFormat formato = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
+        fecha.setText(formato.format(Calendar.getInstance().getTime()));
+    }
+
+    private void mostrarCalendario() {
+        Calendar seleccion = Calendar.getInstance();
+        String valor = fecha.getText().toString();
+        if (ApunteController.esFechaValida(valor)) {
+            String[] partes = valor.split("-");
+            seleccion.set(Integer.parseInt(partes[0]), Integer.parseInt(partes[1]) - 1,
+                    Integer.parseInt(partes[2]));
+        }
+        DatePickerDialog calendario = new DatePickerDialog(this, (vista, anio, mes, dia) ->
+                fecha.setText(String.format(Locale.ROOT, "%04d-%02d-%02d", anio, mes + 1, dia)),
+                seleccion.get(Calendar.YEAR), seleccion.get(Calendar.MONTH),
+                seleccion.get(Calendar.DAY_OF_MONTH));
+        calendario.show();
     }
 
     private void cargarAsignaturas() {
@@ -302,10 +332,11 @@ public class MainActivity extends AppCompatActivity {
                 descripcion.getText().toString(), rutaAudio);
         String error = controller.validarApunte(apunte);
         if (error != null) { mostrarMensaje("Revise los datos", error); return; }
+        int idGuardado;
         try {
-            boolean guardado = apunteId == 0 ? controller.insertar(apunte) > 0
-                    : controller.actualizar(apunte) == 1;
-            if (!guardado) { mostrarMensaje("Guardar", "No se guardó el apunte. Puede que ya no exista."); return; }
+            if (apunteId == 0) idGuardado = (int) controller.insertar(apunte);
+            else idGuardado = controller.actualizar(apunte) == 1 ? apunteId : 0;
+            if (idGuardado <= 0) { mostrarMensaje("Guardar", "No se guardó el apunte. Puede que ya no exista."); return; }
         } catch (SQLiteException | IllegalArgumentException e) {
             mostrarMensaje("Guardar", "No se pudo guardar el apunte. Revise los datos y el espacio disponible."); return;
         }
@@ -325,10 +356,25 @@ public class MainActivity extends AppCompatActivity {
                     .setMessage("Los cambios se guardaron correctamente.")
                     .setPositiveButton("Aceptar", (d, w) -> finish()).setCancelable(false).show();
         } else {
-            tema.setText(""); fecha.setText(""); descripcion.setText("");
+            tema.setText(""); colocarFechaActual(); descripcion.setText("");
             asignatura.setSelection(0); segundosGrabados = 0;
             actualizarEstadoAudio();
-            mostrarMensaje("Apunte guardado", "El apunte se guardó correctamente.");
+            new AlertDialog.Builder(this).setTitle("Apunte guardado")
+                    .setMessage("El apunte se guardó correctamente. ¿Qué desea hacer ahora?")
+                    .setNeutralButton("Audio a texto", (d, w) -> {
+                        Intent dictado = new Intent(this, DictadoActivity.class);
+                        dictado.putExtra(EXTRA_APUNTE_ID, idGuardado);
+                        dictado.putExtra(DictadoActivity.EXTRA_TRANSCRIBIR_AUDIO, true);
+                        startActivity(dictado);
+                    })
+                    .setPositiveButton("Crear nuevo apunte", (d, w) -> colocarFechaActual())
+                    .setNegativeButton("Salir", (d, w) -> {
+                        Intent inicio = new Intent(this, InicioActivity.class);
+                        inicio.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        startActivity(inicio);
+                        finish();
+                    })
+                    .setCancelable(false).show();
         }
     }
 
@@ -382,6 +428,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override protected void onSaveInstanceState(Bundle outState) {
         if (recorder != null) detenerGrabacion();
+        outState.putString("fecha", fecha.getText().toString());
         outState.putString("audio", rutaAudio);
         outState.putString("original", audioOriginal);
         outState.putLong("segundos", segundosGrabados);
@@ -390,6 +437,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void restaurarFormulario(Bundle estado) {
+        fecha.setText(estado.getString("fecha", ""));
         rutaAudio = estado.getString("audio", "");
         audioOriginal = estado.getString("original", "");
         segundosGrabados = estado.getLong("segundos", 0);

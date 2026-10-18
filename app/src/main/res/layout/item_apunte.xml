@@ -1,8 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<CheckedTextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@android:id/text1" android:layout_width="match_parent"
-    android:layout_height="wrap_content" android:minHeight="76dp"
-    android:padding="16dp" android:gravity="center_vertical"
-    android:textSize="16sp" android:textColor="@color/ink"
-    android:checkMark="?android:attr/listChoiceIndicatorSingle"
-    android:background="@drawable/fondo_apunte" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:minHeight="96dp" android:padding="16dp" android:gravity="center_vertical"
+    android:orientation="horizontal" android:background="@drawable/fondo_apunte">
+    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1" android:orientation="vertical" android:layout_marginEnd="12dp">
+        <TextView android:id="@+id/txtFechaFila" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:textSize="13sp" android:textColor="@color/muted" />
+        <TextView android:id="@+id/txtTemaFila" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:textSize="16sp" android:textColor="@color/ink"
+            android:textStyle="bold" android:layout_marginTop="4dp" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:orientation="vertical" android:gravity="center">
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnTextoFila"
+            style="@style/Bitacora.IconButton" android:focusable="false"
+            android:contentDescription="Ver transcripción" android:tooltipText="Transcribir o ver texto"
+            app:icon="@drawable/ic_notes" app:backgroundTint="@color/soft_green"
+            app:iconTint="@color/primary" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+            style="@style/Bitacora.Caption" android:text="Ver texto" android:layout_marginTop="4dp" />
+    </LinearLayout>
+</LinearLayout>

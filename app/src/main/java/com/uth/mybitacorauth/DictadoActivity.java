@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -25,6 +26,7 @@ import com.uth.mybitacorauth.controller.ApunteController;
 import com.uth.mybitacorauth.model.Apunte;
 import com.uth.mybitacorauth.util.IconosUI;
 import com.uth.mybitacorauth.audio.TranscriptorAudio;
+import com.uth.mybitacorauth.audio.DecodificadorAudio;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -34,11 +36,13 @@ import java.util.concurrent.Future;
 import java.util.ArrayList;
 
 public class DictadoActivity extends AppCompatActivity {
+    public static final String EXTRA_TRANSCRIBIR_AUDIO = "transcribir_audio";
     private ApunteController controller;
     private EditText texto;
     private Button microfono, guardar, transcribir;
     private TextView estadoTranscripcion;
     private boolean transcribiendo;
+    private boolean textoDeAudio;
     private int solicitud;
     private Future<?> trabajo;
     private final ExecutorService ejecutor = Executors.newSingleThreadExecutor();
@@ -63,8 +67,10 @@ public class DictadoActivity extends AppCompatActivity {
                     mostrarMensaje("Dictado", "No se reconoció texto. Puede intentarlo otra vez o escribir manualmente.");
                     return;
                 }
+                textoDeAudio = false;
                 texto.setText(resultados.get(0));
                 texto.setSelection(texto.length());
+                actualizarBotones();
             });
 
     @Override protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +92,15 @@ public class DictadoActivity extends AppCompatActivity {
         apunteId = getIntent().getIntExtra(MainActivity.EXTRA_APUNTE_ID, 0);
         reconociendo = savedInstanceState != null && savedInstanceState.getBoolean("reconociendo");
         cargarApunte(savedInstanceState);
+        textoDeAudio = savedInstanceState != null && savedInstanceState.getBoolean("textoDeAudio");
+        if (getIntent().getBooleanExtra(EXTRA_TRANSCRIBIR_AUDIO, false)) {
+            ((TextView) findViewById(R.id.txtTituloDictado)).setText("Audio a texto");
+            ((TextView) findViewById(R.id.txtTituloTexto)).setText("Texto del audio");
+            ((TextView) findViewById(R.id.txtAyudaDictado)).setText(
+                    "Consulta el texto de esta grabación. Puedes corregirlo y guardarlo como descripción.");
+            findViewById(R.id.panelMicrofono).setVisibility(View.GONE);
+            findViewById(R.id.txtEtiquetaMicrofono).setVisibility(View.GONE);
+        }
         findViewById(R.id.btnAtrasDictado).setOnClickListener(v -> finish());
         microfono.setOnClickListener(v -> iniciarDictado());
         guardar.setOnClickListener(v -> guardarDescripcion());
@@ -94,6 +109,11 @@ public class DictadoActivity extends AppCompatActivity {
             else confirmarTranscripcion();
         });
         actualizarBotones();
+        // La acción Audio a texto abre directamente el audio del apunte elegido.
+        if (savedInstanceState == null && apunteCargado
+                && getIntent().getBooleanExtra(EXTRA_TRANSCRIBIR_AUDIO, false)) {
+            iniciarTranscripcion();
+        }
     }
 
     private void cargarApunte(Bundle estado) {
@@ -145,7 +165,7 @@ public class DictadoActivity extends AppCompatActivity {
         if (error != null) { mostrarMensaje("Descripción", error); return; }
         try {
             // Solo cambia la descripción, sin modificar el tema, la fecha ni el audio.
-            if (controller.actualizarDescripcion(apunteId, descripcion) != 1) {
+            if (controller.actualizarDescripcion(apunteId, descripcion, textoDeAudio) != 1) {
                 mostrarMensaje("Guardar", "No se pudo actualizar la descripción. El apunte puede haber sido eliminado.");
                 return;
             }
@@ -161,14 +181,16 @@ public class DictadoActivity extends AppCompatActivity {
                 .setMessage("El resultado reemplazará el texto de este campo. La descripción guardada "
                         + "solo cambiará cuando toque Guardar Descripción.")
                 .setNegativeButton("Cancelar", null)
-                .setPositiveButton("Transcribir", (d, w) -> iniciarTranscripcion()).show();
+                .setPositiveButton("Transcribir", (d, w) -> iniciarTranscripcion(true)).show();
     }
 
-    private void iniciarTranscripcion() {
+    private void iniciarTranscripcion() { iniciarTranscripcion(false); }
+
+    private void iniciarTranscripcion(boolean repetir) {
         if (transcribiendo || reconociendo || !apunteCargado) return;
         transcribiendo = true;
         int numero = ++solicitud;
-        estadoTranscripcion.setText("Preparando y transcribiendo la grabación…");
+        estadoTranscripcion.setText("Cargando el texto del audio…");
         actualizarBotones();
         Context contexto = getApplicationContext();
         int id = apunteId;
@@ -180,10 +202,23 @@ public class DictadoActivity extends AppCompatActivity {
             try {
                 Apunte apunte = datos.buscarPorId(id);
                 if (apunte == null) throw new IOException("El apunte seleccionado ya no existe.");
-                File archivo = datos.prepararAudio(apunte);
-                resultado = new TranscriptorAudio().transcribir(contexto, archivo);
+                resultado = repetir ? null : datos.obtenerTranscripcion(id);
+                if (resultado == null || resultado.trim().isEmpty()) {
+                    runOnUiThread(() -> {
+                        if (!isDestroyed() && !isFinishing() && numero == solicitud) {
+                            estadoTranscripcion.setText("Transcribiendo la grabación…");
+                        }
+                    });
+                    File archivo = datos.prepararAudio(apunte);
+                    resultado = new TranscriptorAudio().transcribir(contexto, archivo);
+                    DecodificadorAudio.comprobarCancelacion();
+                    if (!resultado.trim().isEmpty()
+                            && !datos.guardarTranscripcion(id, apunte.getAudio(), resultado)) {
+                        throw new IOException("La grabación cambió mientras se procesaba. Vuelva a abrir el apunte.");
+                    }
+                }
             } catch (IOException e) {
-                error = e.getMessage();
+                error = e.getMessage() == null ? "No se pudo leer la grabación." : e.getMessage();
             } catch (RuntimeException | LinkageError e) {
                 Log.e("DictadoActivity", "Error al transcribir la grabación", e);
                 error = "No se pudo transcribir la grabación en este dispositivo. Su texto se conserva.";
@@ -206,9 +241,11 @@ public class DictadoActivity extends AppCompatActivity {
             mostrarMensaje("Transcripción", "No se reconocieron palabras en la grabación. "
                     + "Compruebe que contenga voz audible o escriba la descripción manualmente.");
         } else {
+            textoDeAudio = true;
             texto.setText(resultado);
             texto.setSelection(texto.length());
-            estadoTranscripcion.setText("Transcripción lista. Revise el texto y guarde la descripción.");
+            estadoTranscripcion.setText("Texto del audio listo. Puede revisarlo y guardar la descripción.");
+            actualizarBotones();
         }
     }
 
@@ -229,7 +266,8 @@ public class DictadoActivity extends AppCompatActivity {
         if (guardar != null) guardar.setEnabled(apunteCargado && !reconociendo && !transcribiendo);
         if (transcribir != null) {
             transcribir.setEnabled(apunteCargado && !reconociendo);
-            transcribir.setText(transcribiendo ? "Cancelar transcripción" : "Transcribir audio guardado");
+            transcribir.setText(transcribiendo ? "Cancelar transcripción"
+                    : textoDeAudio ? "Transcribir nuevamente" : "Transcribir audio guardado");
         }
         if (texto != null) texto.setEnabled(apunteCargado && !transcribiendo);
     }
@@ -242,6 +280,7 @@ public class DictadoActivity extends AppCompatActivity {
     @Override protected void onSaveInstanceState(Bundle outState) {
         outState.putString("texto", texto.getText().toString());
         outState.putBoolean("reconociendo", reconociendo);
+        outState.putBoolean("textoDeAudio", textoDeAudio);
         super.onSaveInstanceState(outState);
     }
 

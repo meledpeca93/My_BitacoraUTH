@@ -54,9 +54,15 @@ public class ApunteDAO {
         SQLiteDatabase db = helper.getWritableDatabase();
         db.beginTransaction();
         try {
+            Apunte anterior = buscarPorId(apunte.getId());
             int filas = db.update(DatabaseHelper.TABLA_APUNTES, crearValores(apunte),
                     "id = ?", new String[]{String.valueOf(apunte.getId())});
-            if (filas == 1) AudioBlobDAO.guardar(db, apunte.getId(), archivos.obtenerArchivo(apunte.getAudio()));
+            if (filas == 1) {
+                AudioBlobDAO.guardar(db, apunte.getId(), archivos.obtenerArchivo(apunte.getAudio()));
+                if (anterior != null && !anterior.getAudio().equals(apunte.getAudio())) {
+                    db.delete("transcripciones", "apunte_id = ?", new String[]{String.valueOf(apunte.getId())});
+                }
+            }
             db.setTransactionSuccessful();
             return filas;
         } catch (IOException e) {
@@ -65,10 +71,58 @@ public class ApunteDAO {
     }
 
     public int actualizarDescripcion(int id, String descripcion) {
-        ContentValues valores = new ContentValues();
-        valores.put("descripcion", descripcion);
-        return helper.getWritableDatabase().update(DatabaseHelper.TABLA_APUNTES, valores,
-                "id = ?", new String[]{String.valueOf(id)});
+        return actualizarDescripcion(id, descripcion, false);
+    }
+
+    public int actualizarDescripcion(int id, String descripcion, boolean corregirTranscripcion) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            ContentValues valores = new ContentValues();
+            valores.put("descripcion", descripcion);
+            int filas = db.update(DatabaseHelper.TABLA_APUNTES, valores, "id = ?",
+                    new String[]{String.valueOf(id)});
+            if (filas == 1 && corregirTranscripcion) {
+                ContentValues texto = new ContentValues();
+                texto.put("texto", descripcion);
+                db.update("transcripciones", texto,
+                        "apunte_id = ? AND audio = (SELECT audio FROM apuntes WHERE id = ?)",
+                        new String[]{String.valueOf(id), String.valueOf(id)});
+            }
+            db.setTransactionSuccessful();
+            return filas;
+        } finally { db.endTransaction(); }
+    }
+
+    public String obtenerTranscripcion(int id) {
+        SQLiteDatabase db = helper.getReadableDatabase();
+        try (Cursor cursor = db.rawQuery("SELECT t.texto FROM transcripciones t "
+                + "INNER JOIN apuntes a ON a.id = t.apunte_id AND a.audio = t.audio WHERE a.id = ?",
+                new String[]{String.valueOf(id)})) {
+            return cursor.moveToFirst() ? cursor.getString(0) : null;
+        }
+    }
+
+    public boolean guardarTranscripcion(int id, String audio, String texto) {
+        SQLiteDatabase db = helper.getWritableDatabase();
+        db.beginTransaction();
+        try {
+            // No asocia un resultado antiguo a una grabación que fue reemplazada mientras se procesaba.
+            try (Cursor cursor = db.query("apuntes", new String[]{"id"}, "id = ? AND audio = ?",
+                    new String[]{String.valueOf(id), audio}, null, null, null)) {
+                if (!cursor.moveToFirst()) return false;
+            }
+            ContentValues valores = new ContentValues();
+            valores.put("apunte_id", id);
+            valores.put("audio", audio);
+            valores.put("texto", texto);
+            if (db.insertWithOnConflict("transcripciones", null, valores,
+                    SQLiteDatabase.CONFLICT_REPLACE) < 0) {
+                throw new SQLiteException("No se pudo guardar la transcripción.");
+            }
+            db.setTransactionSuccessful();
+            return true;
+        } finally { db.endTransaction(); }
     }
 
     public int eliminar(int id) {

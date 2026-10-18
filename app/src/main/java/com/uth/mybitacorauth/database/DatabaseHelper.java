@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLA_APUNTES = "apuntes";
     private static final String NOMBRE_BASE = "bitacora_clases.db";
-    private static final int VERSION_BASE = 3;
+    private static final int VERSION_BASE = 4;
 
     public DatabaseHelper(Context context) {
         super(context.getApplicationContext(), NOMBRE_BASE, null, VERSION_BASE);
@@ -25,6 +25,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "PRIMARY KEY (apunte_id, parte))");
     }
 
+    private void crearTablaTranscripciones(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS transcripciones ("
+                + "apunte_id INTEGER PRIMARY KEY REFERENCES apuntes(id) ON DELETE CASCADE, "
+                + "audio TEXT NOT NULL, texto TEXT NOT NULL)");
+    }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE " + TABLA_APUNTES + " ("
@@ -32,6 +38,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 + "asignatura TEXT NOT NULL, tema TEXT NOT NULL, "
                 + "fecha TEXT NOT NULL, descripcion TEXT NOT NULL, audio TEXT NOT NULL)");
         crearTablaAudio(db);
+        crearTablaTranscripciones(db);
     }
 
     @Override
@@ -43,5 +50,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     new Object[]{"/%/audios/%"});
         }
         if (oldVersion < 3) crearTablaAudio(db);
+        if (oldVersion < 4) crearTablaTranscripciones(db);
     }
 }
