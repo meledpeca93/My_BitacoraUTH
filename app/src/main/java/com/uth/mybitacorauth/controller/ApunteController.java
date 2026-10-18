@@ -98,6 +98,8 @@ public class ApunteController {
 
     public Apunte buscarPorId(int id) { return dao.buscarPorId(id); }
 
+    public File prepararAudio(Apunte apunte) { return dao.prepararAudio(apunte); }
+
     public int eliminar(int id) {
         if (id <= 0) throw new IllegalArgumentException("Seleccione un apunte válido.");
         // El archivo se eliminará desde la vista solo si este resultado es 1.

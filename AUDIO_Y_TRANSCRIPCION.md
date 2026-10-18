@@ -1,62 +1,80 @@
-# Audio y transcripción: decisión técnica
+# Audio BLOB y transcripción — estado al 2026-10-18
 
-## Almacenamiento implementado
+## Implementado: archivos privados y copia binaria en SQLite
 
-El audio se graba con MediaRecorder, en contenedor MPEG-4 y codificación AAC,
-con extensión `.m4a`. Se guarda en `getFilesDir()/audios/`.
+MediaRecorder genera AAC dentro de un archivo MPEG-4 con extensión `.m4a` en
+`getFilesDir()/audios/`. El atributo original `String audio` y la columna TEXT
+conservan una ruta relativa, por ejemplo `audios/nota_123.m4a`.
 
-SQLite guarda únicamente la ruta relativa, por ejemplo `audios/nota_123.m4a`.
-`ArchivoAudio.obtenerArchivo()` combina esa ruta con el directorio privado actual.
-No se necesitan permisos de almacenamiento, y la carpeta no es una carpeta pública
-visible desde el explorador de archivos. Desinstalar la aplicación elimina sus datos privados.
+Desde la versión 3 de DatabaseHelper se añade:
 
-La versión 2 de DatabaseHelper convierte las rutas absolutas anteriores en rutas
-relativas sin eliminar los apuntes ni cambiar la columna `audio TEXT NOT NULL`.
-ArchivoAudio también interpreta rutas antiguas, limita las operaciones a la carpeta
-audios y rechaza rutas que intenten salir de ella.
+```sql
+CREATE TABLE audio_fragmentos (
+    apunte_id INTEGER NOT NULL REFERENCES apuntes(id) ON DELETE CASCADE,
+    parte INTEGER NOT NULL,
+    datos BLOB NOT NULL,
+    PRIMARY KEY (apunte_id, parte)
+);
+```
 
-Los archivos temporales descartados se eliminan. Al actualizar se conserva el audio
-original hasta confirmar el guardado; al eliminar se comprueba que ningún otro apunte
-use el archivo. Si no se puede comprobar, se conserva el archivo.
+AudioBlobDAO lee el archivo en bloques de hasta 256 KiB y los guarda en SQLite.
+ApunteDAO usa transacciones para que el apunte y sus bytes se guarden juntos.
+Una recuperación concatena los bloques ordenados en un archivo temporal y lo mueve
+a su ruta privada al finalizar. No se carga todo el audio en memoria ni en una sola
+fila del Cursor. Las consultas del listado solo leen los metadatos de apuntes.
 
-## Qué significa BLOB
+Se mantienen los archivos porque MediaPlayer reproduce desde el sistema de archivos.
+Si falta uno y hay BLOB, el DAO puede reconstruirlo antes de reproducir o editar.
+Los audios anteriores se respaldan en BLOB la primera vez que se usan con esta versión.
+Si ya se perdió el archivo anterior antes de contar con respaldo BLOB, no se puede recuperar.
+No se necesitan permisos de almacenamiento. Desinstalar la app elimina sus datos privados.
 
-BLOB significa Binary Large Object: permite guardar los bytes de un archivo dentro
-de SQLite. No es una extensión de audio, un códec ni un servicio de transcripción.
-Cambiar `TEXT` por `BLOB` no convierte voz a texto.
+## Qué falta para transcribir el audio guardado
 
-Para este examen se conserva el modelo original: `String audio` contiene la ruta.
-No se añadió una columna BLOB ni se duplicaron los archivos en la base de datos.
+BLOB es almacenamiento: no reconoce palabras. Se conserva el dictado en vivo mediante
+RecognizerIntent, como exige el examen. Todavía no hay un motor que transcriba el archivo.
 
-## Reconocimiento implementado
+### Recomendación: Vosk local
 
-DictadoActivity usa RecognizerIntent.ACTION_RECOGNIZE_SPEECH, idioma `es-HN` y una
-Activity externa compatible. El usuario habla, revisa el resultado y guarda la descripción.
-Este flujo no transcribe la grabación de MediaRecorder ya guardada.
+Vosk tiene una biblioteca Android y un modelo pequeño en español,
+`vosk-model-small-es-0.42`, listado con tamaño de 39 MB y licencia Apache 2.0.
+Permitiría procesar las grabaciones sin una API de pago y sin enviar el audio a un servidor.
+Hay que añadir esa biblioteca y el modelo, lo cual amplía la restricción original de
+usar solo APIs nativas. Se solicitó al usuario confirmar esa elección.
 
-## Posibilidad de transcribir una grabación existente
+Flujo propuesto después de esa elección:
 
-Desde API 33, RecognizerIntent.EXTRA_AUDIO_SOURCE permite proporcionar un
-ParcelFileDescriptor con una fuente de audio, junto con codificación, canales y frecuencia.
-El formato predeterminado documentado es PCM de 16 bits, un canal y 16 kHz.
-El archivo actual AAC/M4A necesitaría decodificación a un formato compatible: no basta
-con pasar sus bytes como si fueran PCM.
+1. Recuperar desde BLOB el archivo privado del apunte cuando sea necesario.
+2. Decodificar AAC/M4A a PCM con MediaExtractor y MediaCodec de Android.
+3. Ejecutar Vosk fuera del hilo de la interfaz y liberar sus recursos al terminar.
+4. Mostrar el resultado editable en DictadoActivity, sin sobrescribir automáticamente la descripción.
+5. Guardar solo cuando el usuario confirme, mediante actualizarDescripcion().
 
-El soporte depende del reconocedor instalado. Android advierte que, si no soporta
-esa fuente, puede abrir el micrófono. Por eso no se debe presentar ese flujo como una
-transcripción fiable de archivos en todos los teléfonos. Además, el proyecto soporta
-Android desde API 24.
+Debe probarse con una grabación audible real. Ni BLOB ni un motor de reconocimiento
+pueden recuperar palabras de un archivo que se grabó en silencio.
 
-Otra posibilidad sería un motor local especializado o un servicio de transcripción;
-ambos requieren revisar dependencias, tamaño, conectividad y cambios en el alcance
-original. No se integró ningún servicio ni se envió audio fuera de la aplicación por
-una nueva función de transcripción de archivos.
+### Alternativa: reconocimiento nativo con fuente de audio
 
-Se solicitó al usuario elegir entre mantener dictado, investigar transcripción de
-archivos o guardar BLOB. Hasta recibir esa elección se conserva la implementación
-original de dictado y archivos privados.
+Desde API 33, RecognizerIntent.EXTRA_AUDIO_SOURCE permite entregar un
+ParcelFileDescriptor con audio y especificar frecuencia, codificación y canales.
+No está garantizado en todos los reconocedores: la documentación advierte que, si
+no soporta la fuente, puede abrir el micrófono. El proyecto admite desde API 24.
+Por eso esta alternativa no garantiza transcripción de archivos en todos los teléfonos.
+Un M4A no debe entregarse como si sus bytes comprimidos fueran PCM.
 
-## Fuentes
+## De parte del usuario
 
-- RecognizerIntent y EXTRA_AUDIO_SOURCE: https://developer.android.com/reference/android/speech/RecognizerIntent#EXTRA_AUDIO_SOURCE
-- MediaRecorder: https://developer.android.com/media/platform/mediarecorder
+- Elegir Vosk local o aceptar la compatibilidad limitada de la alternativa nativa.
+- Encender un emulador o conectar un teléfono con depuración USB para las pruebas SQLite.
+- Facilitar una grabación audible breve en español para verificar la transcripción real.
+- Para Vosk, permitir la descarga inicial de biblioteca y modelo; no se requiere clave API.
+  Si la descarga no es accesible desde este entorno, colocar el ZIP oficial del modelo
+  en la raíz del proyecto permitirá incorporarlo después de verificar su contenido.
+
+## Fuentes oficiales
+
+- Vosk Android: https://alphacephei.com/vosk/android
+- Modelos y licencias: https://alphacephei.com/vosk/models
+- Ejemplo Android oficial: https://github.com/alphacep/vosk-android-demo
+- Fuente de audio nativa: https://developer.android.com/reference/android/speech/RecognizerIntent#EXTRA_AUDIO_SOURCE
+- Decodificación: https://developer.android.com/reference/android/media/MediaCodec

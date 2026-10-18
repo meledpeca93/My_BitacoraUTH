@@ -333,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             Apunte apunte = controller.buscarPorId(apunteId);
             if (apunte == null) throw new IllegalArgumentException();
+            controller.prepararAudio(apunte);
             seleccionarAsignatura(apunte.getAsignatura());
             tema.setText(apunte.getTema()); fecha.setText(apunte.getFecha());
             descripcion.setText(apunte.getDescripcion());

@@ -169,11 +169,8 @@ public class ApuntesActivity extends AppCompatActivity {
         if (player != null) { liberarReproductor(); return; }
         Apunte apunte = obtenerSeleccionado();
         if (apunte == null) return;
-        File archivo = new ArchivoAudio(getFilesDir()).obtenerArchivo(apunte.getAudio());
-        if (archivo == null || !archivo.isFile() || archivo.length() == 0) {
-            mostrarMensaje("Audio", "El archivo de audio del apunte no existe o está vacío."); return;
-        }
         try {
+            File archivo = controller.prepararAudio(apunte);
             player = new MediaPlayer();
             player.setAudioAttributes(new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
