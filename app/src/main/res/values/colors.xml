@@ -1,0 +1,14 @@
+<resources>
+    <color name="primary">#184D3B</color>
+    <color name="ink">#172F25</color>
+    <color name="muted">#5A6D62</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="background">#F4F6F2</color>
+    <color name="soft_green">#E6EEE3</color>
+    <color name="accent">#D9EDB9</color>
+    <color name="danger">#A72E39</color>
+    <color name="outline">#D8E2D6</color>
+    <color name="apunte_seleccionado">#D9EDB9</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

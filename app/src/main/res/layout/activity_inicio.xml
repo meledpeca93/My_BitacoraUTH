@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/main" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/background">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="20dp" android:background="@drawable/bg_card" android:orientation="vertical">
+<ImageView android:layout_width="match_parent" android:layout_height="88dp" android:src="@drawable/uth_logo" android:scaleType="fitCenter" android:contentDescription="Universidad Tecnológica de Honduras" />
+</LinearLayout>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/Bitacora.Caption" android:text="TU ESPACIO DE APRENDIZAJE" android:gravity="start" android:letterSpacing="0.08" android:layout_marginTop="36dp" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/Bitacora.Title" android:text="Te damos la\nbienvenida." android:textSize="38sp" android:layout_marginTop="12dp" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/Bitacora.Caption" android:text="Una clase, una idea, un nuevo apunte. Guarda lo importante y vuelve a escucharlo cuando lo necesites." android:gravity="start" android:textSize="16sp" android:lineSpacingExtra="5dp" android:layout_marginTop="16dp" />
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp" android:background="@drawable/bg_hero" android:layout_marginTop="28dp">
+<ImageView android:layout_width="44dp" android:layout_height="44dp" android:src="@drawable/ic_book" android:tint="@color/accent" android:importantForAccessibility="no" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Bitácora de Clases" android:textSize="24sp" android:textStyle="bold" android:textColor="@color/white" android:layout_marginTop="16dp" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Tus materias, tus notas y tu voz, en un solo lugar." android:textSize="15sp" android:textColor="@color/white" android:layout_marginTop="8dp" android:lineSpacingExtra="3dp" />
+</LinearLayout>
+<com.google.android.material.button.MaterialButton android:id="@+id/btnNuevoApunte" style="@style/Bitacora.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Crear un apunte" app:icon="@drawable/ic_add" android:layout_marginTop="28dp" />
+<com.google.android.material.button.MaterialButton android:id="@+id/btnMisApuntes" style="@style/Bitacora.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Mis apuntes" app:icon="@drawable/ic_notes" app:backgroundTint="@color/soft_green" android:textColor="@color/primary" app:iconTint="@color/primary" android:layout_marginTop="8dp" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/Bitacora.Caption" android:text="Programación Móvil I · UTH" android:layout_marginTop="28dp" android:layout_marginBottom="8dp" />
+</LinearLayout></ScrollView>
