@@ -1,17 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/main" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/background">
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp"><LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="20dp" android:background="@drawable/bg_card" android:orientation="vertical">
-<ImageView android:layout_width="match_parent" android:layout_height="88dp" android:src="@drawable/uth_logo" android:scaleType="fitCenter" android:contentDescription="Universidad Tecnológica de Honduras" />
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+ android:id="@+id/main" android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" android:background="@color/background">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+<ImageView android:layout_width="0dp" android:layout_weight="1" android:layout_height="48dp" android:src="@drawable/uth_logo" android:scaleType="fitStart" android:contentDescription="Universidad Tecnológica de Honduras" />
+<com.google.android.material.button.MaterialButton android:id="@+id/btnAcercaDe" style="@style/Bitacora.IconButton" android:layout_width="48dp" android:layout_height="48dp" app:backgroundTint="@color/surface" app:iconTint="@color/primary" app:icon="@drawable/ic_aviso" android:contentDescription="Acerca de" android:tooltipText="Acerca de" app:strokeWidth="1dp" app:strokeColor="@color/outline" />
 </LinearLayout>
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/Bitacora.Caption" android:text="TU ESPACIO DE APRENDIZAJE" android:gravity="start" android:letterSpacing="0.08" android:layout_marginTop="36dp" />
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/Bitacora.Title" android:text="Te damos la\nbienvenida." android:textSize="38sp" android:layout_marginTop="12dp" />
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/Bitacora.Caption" android:text="Una clase, una idea, un nuevo apunte. Guarda lo importante y vuelve a escucharlo cuando lo necesites." android:gravity="start" android:textSize="16sp" android:lineSpacingExtra="5dp" android:layout_marginTop="16dp" />
-<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp" android:background="@drawable/bg_hero" android:layout_marginTop="28dp">
-<ImageView android:layout_width="44dp" android:layout_height="44dp" android:src="@drawable/ic_book" app:tint="@color/accent" android:importantForAccessibility="no" />
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Bitácora de Clases" android:textSize="24sp" android:textStyle="bold" android:textColor="@color/white" android:layout_marginTop="16dp" />
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Tus materias, tus notas y tu voz, en un solo lugar." android:textSize="15sp" android:textColor="@color/white" android:layout_marginTop="8dp" android:lineSpacingExtra="3dp" />
+<TextView android:id="@+id/txtSaludo" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="30dp" android:text="Hola, Melvin" android:textColor="@color/muted" android:textSize="16sp" />
+<androidx.appcompat.widget.AppCompatTextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:text="Tu aprendizaje contigo" android:textSize="24sp" android:maxLines="1" app:autoSizeTextType="uniform" app:autoSizeMinTextSize="12sp" app:autoSizeMaxTextSize="24sp" app:autoSizeStepGranularity="1sp" android:fontFamily="sans-serif-medium" android:textColor="@color/ink" android:lineSpacingExtra="2dp" />
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="24dp" android:padding="22dp" android:background="@drawable/bg_inicio_hero" android:orientation="vertical">
+<TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="BITÁCORA DE CLASES" android:textColor="@color/accent" android:textSize="11sp" android:textStyle="bold" android:letterSpacing="0.14" />
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:gravity="center_vertical">
+<LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Grandes ideas.
+Un solo lugar." android:textColor="@color/white" android:textSize="25sp" android:textStyle="bold" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:text="Dale un espacio a lo que aprendes cada día." android:textColor="#E1EBD9" android:textSize="14sp" android:lineSpacingExtra="3dp" />
 </LinearLayout>
-<com.google.android.material.button.MaterialButton android:id="@+id/btnNuevoApunte" style="@style/Bitacora.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Crear un apunte" app:icon="@drawable/ic_add" android:layout_marginTop="28dp" />
-<com.google.android.material.button.MaterialButton android:id="@+id/btnMisApuntes" style="@style/Bitacora.PrimaryButton" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Mis apuntes" app:icon="@drawable/ic_notes" app:backgroundTint="@color/soft_green" android:textColor="@color/primary" app:iconTint="@color/primary" android:layout_marginTop="8dp" />
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" style="@style/Bitacora.Caption" android:text="Programación Móvil I · UTH" android:layout_marginTop="28dp" android:layout_marginBottom="8dp" />
+<ImageView android:layout_width="104dp" android:layout_height="116dp" android:layout_marginStart="8dp" android:src="@drawable/ilustracion_bitacora" android:importantForAccessibility="no" />
+</LinearLayout>
+<View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="20dp" android:background="#49755F" />
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:gravity="center_vertical">
+<ImageView android:layout_width="18dp" android:layout_height="18dp" android:src="@drawable/ic_mic" app:tint="@color/accent" android:importantForAccessibility="no" />
+<TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:text="Escribe ideas · Guarda tu voz" android:textSize="12sp" android:textColor="@color/white" />
+</LinearLayout></LinearLayout>
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:text="Empieza por aquí" android:textColor="@color/ink" android:textSize="20sp" android:textStyle="bold" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Un nuevo apunte o una idea por recordar." android:textColor="@color/muted" android:textSize="14sp" />
+<com.google.android.material.card.MaterialCardView android:id="@+id/btnNuevoApunte" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:clickable="true" android:focusable="true" android:contentDescription="Crear un apunte. Captura lo importante de tu clase" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeWidth="1dp" app:strokeColor="@color/outline" app:cardBackgroundColor="@color/surface">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="18dp" android:gravity="center_vertical" android:importantForAccessibility="noHideDescendants">
+<ImageView android:layout_width="52dp" android:layout_height="52dp" android:padding="14dp" android:background="@drawable/bg_inicio_icon" android:src="@drawable/ic_add" app:tint="@color/primary" />
+<LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:orientation="vertical">
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Crear un apunte" android:textSize="17sp" android:textStyle="bold" android:textColor="@color/ink" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Captura lo importante de tu clase" android:textSize="13sp" android:textColor="@color/muted" />
+</LinearLayout>
+<ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_marginStart="8dp" android:rotation="180" android:src="@drawable/ic_back" app:tint="@color/primary" />
+</LinearLayout></com.google.android.material.card.MaterialCardView><com.google.android.material.card.MaterialCardView android:id="@+id/btnMisApuntes" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:clickable="true" android:focusable="true" android:contentDescription="Mis apuntes. Consulta, escucha y sigue aprendiendo" app:cardCornerRadius="22dp" app:cardElevation="0dp" app:strokeWidth="1dp" app:strokeColor="@color/outline" app:cardBackgroundColor="@color/surface">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="18dp" android:gravity="center_vertical" android:importantForAccessibility="noHideDescendants">
+<ImageView android:layout_width="52dp" android:layout_height="52dp" android:padding="14dp" android:background="@drawable/bg_inicio_icon" android:src="@drawable/ic_notes" app:tint="@color/primary" />
+<LinearLayout android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:layout_marginStart="14dp" android:orientation="vertical">
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Mis apuntes" android:textSize="17sp" android:textStyle="bold" android:textColor="@color/ink" />
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Consulta, escucha y sigue aprendiendo" android:textSize="13sp" android:textColor="@color/muted" />
+</LinearLayout>
+<ImageView android:layout_width="20dp" android:layout_height="20dp" android:layout_marginStart="8dp" android:rotation="180" android:src="@drawable/ic_back" app:tint="@color/primary" />
+</LinearLayout></com.google.android.material.card.MaterialCardView><TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="28dp" android:layout_marginBottom="8dp" android:gravity="center" android:text="Hecho para aprender, creado por Melvin.
+Programación Móvil 1 · UTH" android:textSize="12sp" android:lineSpacingExtra="5dp" android:textColor="@color/muted" />
 </LinearLayout></ScrollView>

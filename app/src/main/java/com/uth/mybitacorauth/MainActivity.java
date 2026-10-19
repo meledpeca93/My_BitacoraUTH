@@ -1,5 +1,7 @@
 package com.uth.mybitacorauth;
 
+import com.uth.mybitacorauth.util.AvisosUI;
+
 import android.Manifest;
 import android.app.DatePickerDialog;
 import android.content.Intent;
@@ -418,8 +420,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void mostrarMensaje(String titulo, String mensaje) {
-        if (!isFinishing() && !isDestroyed()) new AlertDialog.Builder(this)
-                .setTitle(titulo).setMessage(mensaje).setPositiveButton("Aceptar", null).show();
+        AvisosUI.mostrar(this, titulo, mensaje);
     }
 
     private void borrarAudioTemporal() {

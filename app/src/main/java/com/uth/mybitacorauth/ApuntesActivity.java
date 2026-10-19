@@ -1,5 +1,7 @@
 package com.uth.mybitacorauth;
 
+import com.uth.mybitacorauth.util.AvisosUI;
+
 import android.content.Intent;
 import android.database.sqlite.SQLiteException;
 import android.media.MediaPlayer;
@@ -263,8 +265,7 @@ public class ApuntesActivity extends AppCompatActivity {
     }
 
     private void mostrarMensaje(String titulo, String mensaje) {
-        if (!isFinishing() && !isDestroyed()) new AlertDialog.Builder(this).setTitle(titulo)
-                .setMessage(mensaje).setPositiveButton("Aceptar", null).show();
+        AvisosUI.mostrar(this, titulo, mensaje);
     }
 
     @Override protected void onSaveInstanceState(Bundle outState) {

@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /** Pantalla de bienvenida y acceso a las funciones principales. */
 public class InicioActivity extends AppCompatActivity {
@@ -24,5 +25,16 @@ public class InicioActivity extends AppCompatActivity {
                 startActivity(new Intent(this, MainActivity.class)));
         findViewById(R.id.btnMisApuntes).setOnClickListener(v ->
                 startActivity(new Intent(this, ApuntesActivity.class)));
+        findViewById(R.id.btnAcercaDe).setOnClickListener(v ->
+                new MaterialAlertDialogBuilder(this)
+                        .setIcon(R.drawable.ic_book)
+                        .setTitle("Acerca de Mi Bitácora")
+                        .setMessage("CREADOR DEL PROYECTO\nMelvin Edgardo Peña Caballero\n\n"
+                                + "CLASE\nProgramación Móvil 1\n\n"
+                                + "DOCENTE\nIngeniero Enrique Lagos\n\n"
+                                + "HORARIO\nSábado de 3:30 p. m. a 6:30 p. m.\n\n"
+                                + "Universidad Tecnológica de Honduras")
+                        .setPositiveButton("Cerrar", null)
+                        .show());
     }
 }
